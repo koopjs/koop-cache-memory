@@ -30,6 +30,27 @@ function getFeatures() {
     ],
   };
 }
+const serverInfo = {
+  layers: [
+    geojson
+  ],
+  metadata: {
+    name: 'Test',
+    description: 'Test'
+  },
+}
+
+test('Inserting and retreiving from the cache when cached object is collection of layers', t => {
+  cache.insert('keyserverinfo', serverInfo, {ttl: 600})
+  const cached = cache.retrieve('keyserverinfo')
+  t.ok(cached.layers, 'has layers');
+  t.ok(cached.layers[0].type === 'FeatureCollection', 'has feature collection')
+  t.equal(cached.metadata.name, 'Test', 'retrieved metadata')
+  t.ok(cached.metadata.expires, 'expiration set')
+  t.ok(cached.metadata.updated, 'updated set')
+  t.end()
+})
+
 
 test('Inserting and retreiving from the cache', (t) => {
   const geojson = getFeatures();
