@@ -76,15 +76,15 @@ Cache.prototype.retrieve = function (key, options, callback) {
   if (!this.store.has(key)) {
     return callback(new Error("Resource not found"));
   }
-  var geojson = this.store.get(key);
-  var metadata = this.catalog.store.get(key);
+  let geojson = this.store.get(key);
+  const metadata = this.catalog.store.get(key);
   //cached object may be a collection of layers, instead of a single feature collection
   if (geojson.layers) {
     geojson.metadata = metadata;
   } else {
     geojson = {
       type: "FeatureCollection",
-      metadata: metadata,
+      metadata,
       features: geojson,
     };
   }
