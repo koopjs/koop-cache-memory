@@ -38,7 +38,6 @@ test('Upserting and streaming from the cache', t => {
     t.deepEquals(chunk, geojson.features[0])
     t.end()
   })
-
 })
 
 test('Inserting and retreiving from the cache using upsert when the cache is empty', t => {
