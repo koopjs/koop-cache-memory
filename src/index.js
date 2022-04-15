@@ -2,7 +2,6 @@ const Util = require('util')
 const EventEmitter = require('events')
 const _ = require('lodash')
 const Readable = require('stream').Readable
-const h = require('highland')
 
 // Convenience to make callbacks optional in most functions
 function noop () {}
