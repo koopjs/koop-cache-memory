@@ -47,8 +47,6 @@ Cache.prototype.append = function (key, geojson, options = {}, callback = noop) 
   const features = geojson.features ? geojson.features : []
   const existing = this.store.get(key)
   existing.features = existing.features.concat(features)
-  // TODO: test - maybe this is not needed:
-  this.store.set(key, existing)
   this.catalog.update(key, { updated: Date.now() })
   callback()
 }
