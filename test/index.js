@@ -2,6 +2,7 @@ const test = require('tape')
 const Cache = require('../src')
 const cache = new Cache()
 const _ = require('lodash')
+const { asCachableGeojson } = require('../src/helper')
 
 function getFeatures() {
   return {
@@ -151,4 +152,21 @@ test('Trying to delete the catalog entry when something is still in the cache', 
     t.ok(err, 'Should return an error')
     t.equal(err.message, 'Cannot delete catalog entry while data is still in cache', 'Error should have correct message')
   })
+})
+
+test('Helper prepares geojson for cache', t => {
+  const full = getFeatures()
+  const features = full.features
+  const empty = {}
+  const fullGeojson = asCachableGeojson(full)
+  const featuresAsGeojson = asCachableGeojson(features)
+  const emptyAsGeojson = asCachableGeojson(empty)
+  const nullAsGeojson = asCachableGeojson(null)
+  const undefinedAsGeojson = asCachableGeojson(undefined)
+  t.equal(fullGeojson.features[0].properties.key, 'value', 'Full geojson stays geojson')  
+  t.equal(featuresAsGeojson.features[0].properties.key, 'value', 'Features is converted to geojson') 
+  t.equal(emptyAsGeojson.features.length, 0, 'Empty object becomes geojson')
+  t.equal(nullAsGeojson.features.length, 0, 'Null object becomes geojson')
+  t.equal(undefinedAsGeojson.features.length, 0, 'Undefined object becomes geojson')
+  t.end()
 })

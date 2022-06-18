@@ -1,6 +1,7 @@
 const Util = require('util')
 const EventEmitter = require('events')
 const _ = require('lodash')
+const { asCachableGeojson } = require('./helper')
 const Readable = require('stream').Readable
 
 // Convenience to make callbacks optional in most functions
@@ -20,10 +21,11 @@ Util.inherits(Cache, EventEmitter)
 
 Cache.prototype.insert = function (key, geojson, options = {}, callback = noop) {
   if (this.store.has(key)) return callback(new Error('Cache key is already in use'))
+  geojson = asCachableGeojson(geojson);
   this.store.set(key, geojson)
-  const metadata = geojson.metadata || {}
+  const metadata = geojson.metadata;
   if (options.ttl) metadata.expires = Date.now() + (options.ttl * 1000)
-  this.catalog.insert(key, metadata, callback)
+  this.catalog.insert(key, geojson.metadata, callback)
 }
 
 Cache.prototype.upsert = function (key, geojson, options = {}, callback = noop) {
@@ -36,6 +38,7 @@ Cache.prototype.upsert = function (key, geojson, options = {}, callback = noop) 
 
 Cache.prototype.update = function (key, geojson, options = {}, callback = noop) {
   if (!this.store.has(key)) return callback(new Error('Resource not found'))
+  geojson = asCachableGeojson(geojson);
   this.store.set(key, geojson)
   const existingMetadata = this.catalog.store.get(key)
   const metadata = geojson.metadata || existingMetadata
@@ -44,9 +47,9 @@ Cache.prototype.update = function (key, geojson, options = {}, callback = noop) 
 }
 
 Cache.prototype.append = function (key, geojson, options = {}, callback = noop) {
-  const features = geojson.features ? geojson.features : []
+  geojson = asCachableGeojson(geojson);
   const existing = this.store.get(key)
-  existing.features = existing.features.concat(features)
+  existing.features = existing.features.concat(geojson.features)
   this.catalog.update(key, { updated: Date.now() })
   callback()
 }
