@@ -1,24 +1,24 @@
-const Util = require('util')
-const EventEmitter = require('events')
-const _ = require('lodash')
-const { asCachableGeojson } = require('./helper')
-const Readable = require('stream').Readable
+const Util = require('util');
+const EventEmitter = require('events');
+const _ = require('lodash');
+const { asCachableGeojson } = require('./helper');
+const Readable = require('stream').Readable;
 
 // Convenience to make callbacks optional in most functions
-function noop() { }
+function noop() {}
 
 class Cache extends EventEmitter {
   static name = 'Memory Cache';
   static type = 'cache';
   static version = require('../package.json').version;
 
-  constructor (options = {}) {
+  constructor(options = {}) {
     super();
     this.featuresStore = new Map();
     this.catalogStore = new Map();
   }
 
-  insert (key, geojson, options = {}, callback = noop) {
+  insert(key, geojson, options = {}, callback = noop) {
     if (this.featuresStore.has(key)) {
       return callback(new Error('Cache key is already in use'));
     }
@@ -28,22 +28,22 @@ class Cache extends EventEmitter {
     this.catalogInsert(key, rest, options, callback);
   }
 
-  update (key, geojson, options = {}, callback = noop) {
+  update(key, geojson, options = {}, callback = noop) {
     if (!this.featuresStore.has(key)) {
       return callback(new Error('Resource not found'));
     }
     const { features, ...rest } = asCachableGeojson(geojson);
-    
+
     this.featuresStore.set(key, features);
-    
+
     const existingCatalogEntry = this.catalogStore.get(key);
-    
+
     const catalogEntry = rest || existingCatalogEntry;
 
     this.catalogUpdate(key, catalogEntry, callback);
   }
 
-  upsert (key, geojson, options = {}, callback = noop) {
+  upsert(key, geojson, options = {}, callback = noop) {
     if (this.featuresStore.has(key)) {
       this.update(key, geojson, options, callback);
     } else {
@@ -51,20 +51,20 @@ class Cache extends EventEmitter {
     }
   }
 
-  append (key, geojson, options = {}, callback = noop) {
+  append(key, geojson, options = {}, callback = noop) {
     const { features } = asCachableGeojson(geojson);
-    const existingFeatures = this.featuresStore.get(key)
+    const existingFeatures = this.featuresStore.get(key);
     const appendedFeatureArray = existingFeatures.concat(features);
     this.featuresStore.set(key, appendedFeatureArray);
     this.catalogUpdate(key, {
       cache: {
-        updated: Date.now()
-      }
+        updated: Date.now(),
+      },
     });
-    callback()
+    callback();
   }
 
-  retrieve (key, options, callback = noop) {
+  retrieve(key, options, callback = noop) {
     if (!this.featuresStore.has(key)) {
       return callback(new Error('Resource not found'));
     }
@@ -73,34 +73,34 @@ class Cache extends EventEmitter {
     const geojsonWrapper = this.catalogStore.get(key);
 
     const geojson = { ...geojsonWrapper, features };
-    
+
     callback(null, geojson);
 
-    return geojson
+    return geojson;
   }
 
-  createStream (key, options = {}) {
+  createStream(key, options = {}) {
     const features = this.featuresStore.get(key);
     return Readable.from(features);
   }
 
-  delete (key, callback = noop) {
+  delete(key, callback = noop) {
     if (!this.featuresStore.has(key)) {
       return callback(new Error('Resource not found'));
     }
-    this.featuresStore.delete(key)
-    const catalogEntry = this.catalogStore.get(key)
+    this.featuresStore.delete(key);
+    const catalogEntry = this.catalogStore.get(key);
     this.catalogStore.set(key, {
       ...catalogEntry,
       _cache: {
         status: 'deleted',
-        updated: Date.now()
-      }
-    })
-    callback()
+        updated: Date.now(),
+      },
+    });
+    callback();
   }
 
-  catalogInsert (key, catalogEntry, options, callback = noop) {
+  catalogInsert(key, catalogEntry, options, callback = noop) {
     if (this.catalogStore.has(key)) {
       return callback(new Error('Catalog key is already in use'));
     }
@@ -109,46 +109,46 @@ class Cache extends EventEmitter {
     _.set(clonedEntry, '_cache.updated', Date.now());
 
     if (options.ttl) {
-      _.set(clonedEntry, '_cache.expires', Date.now() + (options.ttl * 1000));
+      _.set(clonedEntry, '_cache.expires', Date.now() + options.ttl * 1000);
     }
 
-    this.catalogStore.set(key, clonedEntry)
+    this.catalogStore.set(key, clonedEntry);
 
-    callback()
+    callback();
   }
-  
+
   catalogUpdate = function (key, update, options, callback = noop) {
     if (!this.catalogStore.has(key)) {
       return callback(new Error('Resource not found'));
     }
-    const existingCatalogEntry = this.catalogStore.get(key)
+    const existingCatalogEntry = this.catalogStore.get(key);
     const catalogEntry = {
       ...existingCatalogEntry,
       ..._.cloneDeep(update),
-    }
-    catalogEntry._cache.updated = Date.now()
-    this.catalogStore.set(key, catalogEntry)
-    callback()
-  }
-  
-  catalogRetrieve (key, callback = noop) {
+    };
+    catalogEntry._cache.updated = Date.now();
+    this.catalogStore.set(key, catalogEntry);
+    callback();
+  };
+
+  catalogRetrieve(key, callback = noop) {
     if (!this.catalogStore.has(key)) {
-      return callback(new Error('Resource not found'))
+      return callback(new Error('Resource not found'));
     }
-    const catalogEntry = this.catalogStore.get(key)
-    callback(null, catalogEntry)
-    return catalogEntry
+    const catalogEntry = this.catalogStore.get(key);
+    callback(null, catalogEntry);
+    return catalogEntry;
   }
-  
-  catalogDelete (key, callback = noop) {
+
+  catalogDelete(key, callback = noop) {
     if (this.featuresStore.has(key)) {
-      return callback(new Error('Cannot delete catalog entry while data is still in cache'));
+      return callback(
+        new Error('Cannot delete catalog entry while data is still in cache')
+      );
     }
-    this.catalogStore.delete(key)
-    callback()
+    this.catalogStore.delete(key);
+    callback();
   }
 }
 
-
-
-module.exports = Cache
+module.exports = Cache;
