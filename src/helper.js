@@ -1,3 +1,5 @@
+const _ = require('lodash')
+
 function asCachableGeojson(geojson) {
     if(!geojson || Array.isArray(geojson)) {
       return {
@@ -10,7 +12,7 @@ function asCachableGeojson(geojson) {
     geojson.type = geojson.type || 'FeatureCollection'
     geojson.features = geojson.features || [];
     geojson.metadata = geojson.metadata || {};
-    return geojson;
+    return _.cloneDeep(geojson);
   }
 
   module.exports = {
