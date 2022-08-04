@@ -14,27 +14,27 @@ class Cache extends EventEmitter {
 
   constructor (options = {}) {
     super();
-    this.store = new Map();
+    this.featuresStore = new Map();
     this.catalogStore = new Map();
   }
 
   insert (key, geojson, options = {}, callback = noop) {
-    if (this.store.has(key)) {
+    if (this.featuresStore.has(key)) {
       return callback(new Error('Cache key is already in use'));
     }
     const { features, ...rest } = asCachableGeojson(geojson);
-    this.store.set(key, features);
+    this.featuresStore.set(key, features);
 
     this.catalogInsert(key, rest, options, callback);
   }
 
   update (key, geojson, options = {}, callback = noop) {
-    if (!this.store.has(key)) {
+    if (!this.featuresStore.has(key)) {
       return callback(new Error('Resource not found'));
     }
     const { features, ...rest } = asCachableGeojson(geojson);
     
-    this.store.set(key, features);
+    this.featuresStore.set(key, features);
     
     const existingCatalogEntry = this.catalogStore.get(key);
     
@@ -44,7 +44,7 @@ class Cache extends EventEmitter {
   }
 
   upsert (key, geojson, options = {}, callback = noop) {
-    if (this.store.has(key)) {
+    if (this.featuresStore.has(key)) {
       this.update(key, geojson, options, callback);
     } else {
       this.insert(key, geojson, options, callback);
@@ -53,9 +53,9 @@ class Cache extends EventEmitter {
 
   append (key, geojson, options = {}, callback = noop) {
     const { features } = asCachableGeojson(geojson);
-    const existingFeatures = this.store.get(key)
+    const existingFeatures = this.featuresStore.get(key)
     const appendedFeatureArray = existingFeatures.concat(features);
-    this.store.set(key, appendedFeatureArray);
+    this.featuresStore.set(key, appendedFeatureArray);
     this.catalogUpdate(key, {
       cache: {
         updated: Date.now()
@@ -65,10 +65,10 @@ class Cache extends EventEmitter {
   }
 
   retrieve (key, options, callback = noop) {
-    if (!this.store.has(key)) {
+    if (!this.featuresStore.has(key)) {
       return callback(new Error('Resource not found'));
     }
-    const features = this.store.get(key);
+    const features = this.featuresStore.get(key);
 
     const geojsonWrapper = this.catalogStore.get(key);
 
@@ -80,15 +80,15 @@ class Cache extends EventEmitter {
   }
 
   createStream (key, options = {}) {
-    const features = this.store.get(key);
+    const features = this.featuresStore.get(key);
     return Readable.from(features);
   }
 
   delete (key, callback = noop) {
-    if (!this.store.has(key)) {
+    if (!this.featuresStore.has(key)) {
       return callback(new Error('Resource not found'));
     }
-    this.store.delete(key)
+    this.featuresStore.delete(key)
     const catalogEntry = this.catalogStore.get(key)
     this.catalogStore.set(key, {
       ...catalogEntry,
@@ -141,7 +141,7 @@ class Cache extends EventEmitter {
   }
   
   catalogDelete (key, callback = noop) {
-    if (this.store.has(key)) {
+    if (this.featuresStore.has(key)) {
       return callback(new Error('Cannot delete catalog entry while data is still in cache'));
     }
     this.catalogStore.delete(key)
