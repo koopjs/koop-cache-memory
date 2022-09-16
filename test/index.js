@@ -30,9 +30,10 @@ function getFeatures() {
     ],
   };
 }
+
 const serverInfo = {
   layers: [
-    geojson
+    getFeatures()
   ],
   metadata: {
     name: 'Test',
@@ -46,8 +47,8 @@ test('Inserting and retreiving from the cache when cached object is collection o
   t.ok(cached.layers, 'has layers');
   t.ok(cached.layers[0].type === 'FeatureCollection', 'has feature collection')
   t.equal(cached.metadata.name, 'Test', 'retrieved metadata')
-  t.ok(cached.metadata.expires, 'expiration set')
-  t.ok(cached.metadata.updated, 'updated set')
+  t.ok(cached._cache.expires, 'expiration set')
+  t.ok(cached._cache.updated, 'updated set')
   t.end()
 })
 
@@ -205,6 +206,7 @@ test('Retrieve catalog entry after its data has been deleted', (t) => {
     type: 'FeatureCollection',
     crs: { type: 'name', properties: { type: 'EPSG:4326' } },
     metadata: { name: 'Test', description: 'Test' },
+    layers: []
   });
 });
 

@@ -69,32 +69,8 @@ class Cache extends EventEmitter {
       return callback(new Error('Resource not found'));
     }
     const features = this.featuresStore.get(key);
-Cache.prototype.retrieve = function (key, options, callback) {
-  if (callback === void 0) callback = noop;
 
     const geojsonWrapper = this.catalogStore.get(key);
-  if (!this.store.has(key)) {
-    return callback(new Error("Resource not found"));
-  }
-  let geojson = this.store.get(key);
-  const metadata = this.catalog.store.get(key);
-  //cached object may be a collection of layers, instead of a single feature collection
-  if (geojson.layers) {
-    geojson.metadata = metadata;
-  } else {
-    geojson = {
-      type: "FeatureCollection",
-      metadata,
-      features: geojson,
-    };
-  }
-  callback(null, geojson);
-  return geojson;
-}; 
-
-Cache.prototype.createStream = function (key, options = {}) {
-  return h(this.store.get(key))
-}
 
     const geojson = { ...geojsonWrapper, features };
 
