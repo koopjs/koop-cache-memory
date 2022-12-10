@@ -1,6 +1,6 @@
 # Koop Memory Cache
 
-## DEPRECATED - now migrated to a package in the [Koop monorepo](https://github.com/koopjs/koop/).  Update any `npm` usage to `@koopjs/koop-core`.
+## DEPRECATED - now migrated to a package in the [Koop monorepo](https://github.com/koopjs/koop/).
 
 [![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
 [![Build Status](https://travis-ci.org/koopjs/koop-cache-memory.svg?branch=master)](https://travis-ci.org/koopjs/koop-cache-memory) [![Greenkeeper badge](https://badges.greenkeeper.io/koopjs/koop-cache-memory.svg)](https://greenkeeper.io/)
